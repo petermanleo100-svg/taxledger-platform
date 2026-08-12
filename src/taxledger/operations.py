@@ -7,6 +7,7 @@ from .operation_metrics import record_operation
 from .settings import Settings
 from .preflight import PreflightError,run_preflight
 from .admission import verify_admission
+from .database_metrics import collect_database_health,write_database_metrics
 def main():
  parser=argparse.ArgumentParser(prog="taxledger-operations");sub=parser.add_subparsers(dest="command",required=True)
  create=sub.add_parser("backup-create");create.add_argument("path")
@@ -14,6 +15,7 @@ def main():
  verify=sub.add_parser("audit-verify");verify.add_argument("--tenant")
  sub.add_parser("preflight")
  admission=sub.add_parser("admission-verify");admission.add_argument("evidence_file");admission.add_argument("--release-sha",required=True);admission.add_argument("--max-age-hours",type=int,default=168)
+ sub.add_parser("database-status-export")
  args=parser.parse_args()
  operation=args.command.replace("-","_");metric_dir=os.getenv("TAXLEDGER_TEXTFILE_DIR","")
  metric_path=Path(metric_dir)/f"taxledger_{operation}.prom" if metric_dir else None
@@ -29,6 +31,9 @@ def main():
     if args.command=="preflight":
      try:result=run_preflight(settings,os.getenv("TAXLEDGER_BACKUP_KEY_BASE64",""))
      except PreflightError as exc:result={"valid":False,"error":str(exc)}
+    elif args.command=="database-status-export":
+     if not metric_dir:raise RuntimeError("TAXLEDGER_TEXTFILE_DIR is required for database-status-export")
+     result=collect_database_health(db);write_database_metrics(Path(metric_dir)/"taxledger_database.prom",result)
     elif args.command=="backup-create":result=create_backup(db,args.path)
     elif args.command=="backup-restore":result=restore_backup(Database(args.target_url),args.path)
     else:

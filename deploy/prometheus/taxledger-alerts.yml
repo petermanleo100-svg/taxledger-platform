@@ -52,3 +52,17 @@ groups:
         annotations:
           summary: TaxLedger has no successful backup inside the 15-minute RPO window
           runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
+      - alert: TaxLedgerDatabaseConnectionsSaturated
+        expr: taxledger_db_connection_utilization_ratio > 0.8
+        for: 10m
+        labels: {severity: critical, service: taxledger, owner: database-operations}
+        annotations:
+          summary: TaxLedger PostgreSQL client connections exceed 80% of max_connections
+          runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
+      - alert: TaxLedgerDatabaseStatusExporterStale
+        expr: (time() - taxledger_operation_last_success_timestamp_seconds{operation="database_status_export"} > 600) or absent(taxledger_operation_last_success_timestamp_seconds{operation="database_status_export"})
+        for: 5m
+        labels: {severity: critical, service: taxledger, owner: database-operations}
+        annotations:
+          summary: TaxLedger database health metrics are missing or older than ten minutes
+          runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md

@@ -10,14 +10,14 @@
 - [ ] Backup restore meets agreed RPO/RTO and audit-chain verification passes.
 - [ ] Runtime database role is non-owner/NOBYPASSRLS and the direct SQL RLS attack test passes.
 - [ ] Tenant isolation and preparer/reviewer separation are tested with customer identities.
-- [ ] Node Exporter (or equivalent) scrapes `TAXLEDGER_TEXTFILE_DIR`; backup/integrity jobs write atomic metrics, and readiness, 5xx, latency, database and backup alerts route to named owners.
+- [ ] A separate read-only monitoring identity runs `database-status-export` at least every five minutes and can read only required PostgreSQL statistics. Node Exporter scrapes `TAXLEDGER_TEXTFILE_DIR`; backup/integrity/database jobs write atomic metrics, and readiness, 5xx, latency, saturation, exporter-staleness and backup alerts route to named owners.
 - [ ] Synthetic end-to-end filing workpaper is approved before real data is admitted.
 - [ ] Oversize requests, empty/oversize batches and injected database failures pass negative tests.
 - [ ] Scheduled `audit-verify` and backup jobs use separate least-privileged operational identities.
 - [ ] OIDC issuer/audience/roles/tenant mappings and signing-key rotation are tested; no unapproved HMAC exception remains.
 - [ ] PostgreSQL concurrent audit test proves the tenant chain has no fork.
 - [ ] Encrypted restore runs into an empty, exact-revision PostgreSQL schema; audit chain and business lineage readback pass.
-- [ ] CI `promtool` syntax and synthetic firing tests pass for readiness, 5xx, p95 latency, operation failure and stale backup; a real test notification reaches each named owner in the deployment environment.
+- [ ] CI `promtool` syntax and synthetic firing tests pass for readiness, 5xx, p95 latency, operation failure, stale backup, database saturation and database-exporter staleness; a real test notification reaches each named owner in the deployment environment.
 - [ ] `pip-audit` passes; the release commit has a retained SPDX image SBOM and no unexcepted fixable High/Critical vulnerability. Review the sole time-bounded `CVE-2026-15308` not-affected record and confirm `html.parser` remains outside executable source.
 - [ ] Candidate archive checksum and both GitHub attestations verify before a SemVer tag is approved.
 - [ ] Tagged GHCR image resolves to the recorded immutable digest and provenance/SBOM attestations verify.

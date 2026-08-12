@@ -37,3 +37,7 @@ def test_admission_cli_fails_closed_without_runtime_database_config(tmp_path, mo
     monkeypatch.setattr(sys, "argv", ["taxledger-operations", "admission-verify", str(evidence), "--release-sha", "a" * 40])
     with pytest.raises(SystemExit, match="2"): operations.main()
     assert json.loads(capsys.readouterr().out)["valid"] is False
+def test_database_status_cli_writes_metrics(tmp_path,monkeypatch,capsys):
+    metrics=tmp_path/"metrics";monkeypatch.setenv("TAXLEDGER_TEXTFILE_DIR",str(metrics));monkeypatch.setattr(operations.Settings,"from_env",lambda:SimpleNamespace(database_url="postgresql+psycopg://test"));monkeypatch.setattr(operations,"Database",lambda _url:object());monkeypatch.setattr(operations,"collect_database_health",lambda _db:{"connections":8,"max_connections":10,"utilization_ratio":.8});monkeypatch.setattr(sys,"argv",["taxledger-operations","database-status-export"])
+    with pytest.raises(SystemExit,match="0"):operations.main()
+    assert json.loads(capsys.readouterr().out)["connections"]==8 and "0.800000" in (metrics/"taxledger_database.prom").read_text() and 'operation="database_status_export"' in (metrics/"taxledger_database_status_export.prom").read_text()
