@@ -1,6 +1,7 @@
 # Enterprise pilot release checklist
 
 - [ ] Main CI test, PostgreSQL, container and full Compose smoke jobs pass on the release commit.
+- [ ] GitHub `main` protection still enforces strict `test`, `postgres`, `container`, `compose-smoke` and `analyze` checks for administrators, with force-push and deletion disabled.
 - [ ] `taxledger-operations preflight` returns `valid: true` using the exact production runtime identity and secret bindings.
 - [ ] Tax owner approves rules, tolerance and ERP/invoice mappings.
 - [ ] Security approves identity claims, secret storage, TLS, ingress rate limits and database roles.

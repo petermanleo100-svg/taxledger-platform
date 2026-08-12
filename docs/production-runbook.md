@@ -36,6 +36,8 @@ The `release-image` workflow has two modes. Manual dispatch creates a 14-day can
 
 The request-serving PostgreSQL identity must be `NOSUPERUSER NOBYPASSRLS` and must not own tables. Migrations run as a separate owner. The application sets `app.tenant_id` transaction-locally and forced RLS supplies database-level defense in depth.
 
+Before approving a release, an administrator must run `GH_TOKEN=$(gh auth token) GITHUB_REPOSITORY=petermanleo100-svg/taxledger-platform EXPECTED_REQUIRED_CHECKS=test,postgres,container,compose-smoke,analyze python scripts/verify_github_governance.py`. The verifier fails unless `main` protection, GitHub-Actions-bound checks, secret scanning/push protection and Dependabot security controls match the documented state. It intentionally runs outside Actions: the default workflow token cannot read administration settings, and storing a broad administrator PAT solely for this check would increase credential risk.
+
 Production authentication defaults to `TAXLEDGER_AUTH_MODE=oidc`. Configure HTTPS issuer/JWKS URL and exact audience; signing keys are cached for five minutes and refreshed by `kid`. The HMAC mode is a documented pilot exception only and requires `TAXLEDGER_ALLOW_HMAC_PRODUCTION=true`; record its owner, expiry and migration date. Tax writes take a tenant-scoped PostgreSQL advisory transaction lock before extending the audit chain.
 
 This repository is deployable for an enterprise pilot. Production tax use still requires customer security review, authoritative tax-rule validation, data mapping sign-off and environment-specific capacity testing.
