@@ -6,19 +6,28 @@ groups:
         for: 10m
         labels:
           severity: critical
+          service: taxledger
+          owner: platform-operations
         annotations:
           summary: TaxLedger API 5xx rate exceeds 1%
+          runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
       - alert: TaxLedgerP95LatencyHigh
         expr: histogram_quantile(0.95, sum by (le) (rate(taxledger_http_request_duration_seconds_bucket[10m]))) > 1
         for: 15m
         labels:
           severity: warning
+          service: taxledger
+          owner: platform-operations
         annotations:
           summary: TaxLedger API p95 latency exceeds one second
+          runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
       - alert: TaxLedgerReadinessUnavailable
         expr: probe_success{job="taxledger-readiness"} == 0
         for: 2m
         labels:
           severity: critical
+          service: taxledger
+          owner: platform-operations
         annotations:
           summary: TaxLedger readiness probe is unavailable
+          runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
