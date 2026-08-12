@@ -5,7 +5,8 @@ from sqlalchemy import engine_from_config,pool
 from taxledger.models import Base
 config=context.config
 if config.config_file_name: fileConfig(config.config_file_name)
-if os.getenv("TAXLEDGER_DATABASE_URL"): config.set_main_option("sqlalchemy.url",os.environ["TAXLEDGER_DATABASE_URL"])
+if os.getenv("TAXLEDGER_DATABASE_URL"):
+ config.set_main_option("sqlalchemy.url",os.environ["TAXLEDGER_DATABASE_URL"].replace("%","%%"))
 target_metadata=Base.metadata
 def offline():
  context.configure(url=config.get_main_option("sqlalchemy.url"),target_metadata=target_metadata,literal_binds=True,compare_type=True);context.run_migrations()

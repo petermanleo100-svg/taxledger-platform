@@ -13,3 +13,4 @@
 - [ ] Scheduled `audit-verify` and backup jobs use separate least-privileged operational identities.
 - [ ] OIDC issuer/audience/roles/tenant mappings and signing-key rotation are tested; no unapproved HMAC exception remains.
 - [ ] PostgreSQL concurrent audit test proves the tenant chain has no fork.
+- [ ] Encrypted restore runs into an empty, exact-revision PostgreSQL schema; audit chain and business lineage readback pass.

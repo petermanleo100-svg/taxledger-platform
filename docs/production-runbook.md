@@ -24,7 +24,7 @@
 
 Revoke affected tokens, preserve audit tables and database snapshots, record the incident timeline, verify the audit chain, restore into an isolated database, then obtain business owner approval before resuming filing workflows.
 
-Application backup exports use `taxledger.backup` with a secret-manager supplied 32-byte base64 key. Restores deliberately refuse non-empty targets and verify the recovered audit chain. This portable logical backup complements, but does not replace, managed PostgreSQL PITR; rehearse both quarterly.
+Application backup exports use `taxledger.backup` with a secret-manager supplied 32-byte base64 key. Restores require an empty database already migrated to the exact application Alembic revision; the restore path never creates or upgrades schema implicitly and verifies the recovered audit chain. PostgreSQL CI migrates a clean schema, restores encrypted data and reads back business lineage. This portable logical backup complements, but does not replace, managed PostgreSQL PITR; rehearse both quarterly.
 
 Use `taxledger-operations` for controlled backup, restore and audit verification. Schedule `audit-verify` and alert on a non-zero exit. The API caps bodies at 2 MiB and ledger batches at 1000 rows; tune ingress limits to the same or lower value. Access logs are structured JSON and include the request ID returned to callers.
 

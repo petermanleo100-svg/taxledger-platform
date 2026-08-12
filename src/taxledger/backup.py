@@ -2,12 +2,13 @@ from __future__ import annotations
 import base64,json,os
 from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from sqlalchemy import delete,insert,select
+from sqlalchemy import inspect,insert,select,text
 from .core import Database,canonical,digest,now
 from .models import AuditEvent,FilingWorkpaper,LedgerEntry,VatReconciliation
 from .integrity import verify_audit_chain
 
 TABLES=(LedgerEntry,VatReconciliation,FilingWorkpaper,AuditEvent)
+SCHEMA_REVISION="20260812_0002"
 def _key(value=None):
  raw=value or os.getenv("TAXLEDGER_BACKUP_KEY_BASE64","")
  try:key=base64.b64decode(raw,validate=True)
@@ -27,8 +28,12 @@ def restore_backup(target:Database,path,key_b64=None):
  envelope=json.loads(Path(path).read_text(encoding="utf-8"));nonce=base64.b64decode(envelope["nonce"]);cipher=base64.b64decode(envelope["ciphertext"])
  payload=json.loads(AESGCM(_key(key_b64)).decrypt(nonce,cipher,b"taxledger-backup-v1"))
  if payload.get("format")!="taxledger-backup-v1" or digest(payload)!=envelope["plaintext_sha256"]:raise ValueError("backup integrity verification failed")
- target.initialize()
+ inspector=inspect(target.engine)
+ required={model.__tablename__ for model in TABLES}|{"alembic_version"}
+ if not required.issubset(set(inspector.get_table_names())):raise ValueError("restore target must be migrated to the required Alembic revision")
  with target.connect() as conn:
+  revision=conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one_or_none()
+  if revision!=SCHEMA_REVISION:raise ValueError(f"restore target schema revision must be {SCHEMA_REVISION}")
   if any(conn.execute(select(model.id).limit(1)).first() for model in TABLES):raise ValueError("restore target must be empty")
   for model in TABLES:
    rows=payload["tables"][model.__tablename__]
