@@ -124,6 +124,33 @@ def test_postgres_encrypted_backup_restores_to_clean_schema(postgres_db, tmp_pat
             conn.execute(text("DROP SCHEMA recovery_target CASCADE"))
 
 
+def test_postgres_latest_migration_rollback_preserves_business_data(postgres_db):
+    with postgres_db.engine.begin() as conn:
+        conn.execute(text("DROP SCHEMA IF EXISTS rollback_target CASCADE"))
+        conn.execute(text("CREATE SCHEMA rollback_target"))
+    target_url = make_url(URL).set(query={"options": "-csearch_path=rollback_target"})
+    target = Database(target_url.render_as_string(hide_password=False))
+    environment = {**os.environ, "TAXLEDGER_DATABASE_URL": target.url}
+    try:
+        subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], cwd=ROOT, env=environment, check=True)
+        TaxLedgerService(target, "rollback").ingest([ledger_item("PG-ROLLBACK")])
+        target.engine.dispose()
+        subprocess.run([sys.executable, "-m", "alembic", "downgrade", "20260812_0001"], cwd=ROOT, env=environment, check=True)
+        with target.engine.connect() as conn:
+            assert conn.execute(text("SELECT count(*) FROM ledger_entries WHERE source_id='PG-ROLLBACK'")).scalar_one() == 1
+            assert not conn.execute(text("SELECT relrowsecurity FROM pg_class WHERE relname='ledger_entries' AND relnamespace='rollback_target'::regnamespace")).scalar_one()
+        target.engine.dispose()
+        subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], cwd=ROOT, env=environment, check=True)
+        with target.engine.connect() as conn:
+            assert conn.execute(text("SELECT count(*) FROM ledger_entries WHERE source_id='PG-ROLLBACK'")).scalar_one() == 1
+            state = conn.execute(text("SELECT relrowsecurity, relforcerowsecurity FROM pg_class WHERE relname='ledger_entries' AND relnamespace='rollback_target'::regnamespace")).one()
+            assert state == (True, True)
+    finally:
+        target.engine.dispose()
+        with postgres_db.engine.begin() as conn:
+            conn.execute(text("DROP SCHEMA rollback_target CASCADE"))
+
+
 def test_production_preflight_accepts_runtime_role_and_rejects_owner(postgres_db):
     admin = create_engine(URL, isolation_level="AUTOCOMMIT")
     with admin.connect() as conn:
