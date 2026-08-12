@@ -39,7 +39,7 @@ groups:
           summary: TaxLedger scheduled operation failed
           runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
       - alert: TaxLedgerBackupStale
-        expr: time() - taxledger_operation_last_success_timestamp_seconds{operation="backup_create"} > 900
+        expr: (time() - taxledger_operation_last_success_timestamp_seconds{operation="backup_create"} > 900) or absent(taxledger_operation_last_success_timestamp_seconds{operation="backup_create"})
         for: 5m
         labels: {severity: critical, service: taxledger, owner: platform-operations}
         annotations:

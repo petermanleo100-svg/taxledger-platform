@@ -2,6 +2,14 @@ rule_files:
   - taxledger-alerts.yml
 evaluation_interval: 1m
 tests:
+  - name: taxledger-missing-backup-metric-fails-closed
+    interval: 1m
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: TaxLedgerBackupStale
+        exp_alerts:
+          - exp_labels: {severity: critical, service: taxledger, owner: platform-operations, operation: backup_create}
+            exp_annotations: {summary: "TaxLedger has no successful backup inside the 15-minute RPO window", runbook_url: "https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md"}
   - name: taxledger-api-alerts-fire-after-sustained-breach
     interval: 1m
     input_series:
