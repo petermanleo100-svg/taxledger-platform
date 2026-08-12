@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from .core import Database
 from .service import TaxLedgerService
 from .observability import OperationsMiddleware, metrics_response
-from .security import Principal, authenticate, require
+from .security import Principal, authenticate, require,build_verifier
 from .settings import Settings
 from .integrity import verify_audit_chain
 
@@ -32,11 +32,12 @@ def create_app(database=None, settings: Settings | None = None, initialize: bool
     if initialize is True or (initialize is None and (database is not None or settings.auto_create_schema)): db.initialize()
     app = FastAPI(title="TaxLedger Platform", version="1.0.0", docs_url="/docs" if settings.environment != "production" else None)
     app.add_middleware(OperationsMiddleware)
+    verifier=build_verifier(settings)
     @app.exception_handler(SQLAlchemyError)
     async def database_error(_request, _exc):
         return JSONResponse(status_code=503,content={"detail":"database operation failed"})
     def service(principal: Principal): return TaxLedgerService(db, principal.tenant_id)
-    def current(authorization: str | None = Header(default=None)): return authenticate(settings, authorization)
+    def current(authorization: str | None = Header(default=None)): return authenticate(settings, authorization,verifier)
     @app.get("/health/ready")
     def ready():
         with db.connect() as conn: conn.exec_driver_sql("SELECT 1")

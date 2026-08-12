@@ -12,7 +12,12 @@ services:
     build: .
     environment:
       TAXLEDGER_DATABASE_URL: postgresql+psycopg://taxledger:${POSTGRES_PASSWORD}@postgres:5432/taxledger
-      TAXLEDGER_JWT_SECRET: ${TAXLEDGER_JWT_SECRET:?set TAXLEDGER_JWT_SECRET}
+      TAXLEDGER_AUTH_MODE: ${TAXLEDGER_AUTH_MODE:-oidc}
+      TAXLEDGER_JWT_ISSUER: ${TAXLEDGER_JWT_ISSUER:?set OIDC issuer}
+      TAXLEDGER_JWT_AUDIENCE: ${TAXLEDGER_JWT_AUDIENCE:-taxledger-api}
+      TAXLEDGER_OIDC_JWKS_URL: ${TAXLEDGER_OIDC_JWKS_URL:?set OIDC JWKS URL}
+      TAXLEDGER_JWT_SECRET: ${TAXLEDGER_JWT_SECRET:-}
+      TAXLEDGER_ALLOW_HMAC_PRODUCTION: ${TAXLEDGER_ALLOW_HMAC_PRODUCTION:-false}
       TAXLEDGER_ENV: production
     depends_on: {postgres: {condition: service_healthy}}
     command: ["sh","-c","alembic upgrade head && exec uvicorn taxledger.api:create_app --factory --host 0.0.0.0 --port 8000"]

@@ -16,3 +16,6 @@
 | Runtime abuse controls | 2 MiB body/1000-row batch limits and bounded fields | oversize/empty/invalid payload tests |
 | Safe failure boundary | centralized SQLAlchemy 503 without internal detail | injected database failure leak test |
 | Operability | structured request log, admin integrity API and operations CLI | authorization/integrity/API tests |
+| Enterprise identity | OIDC/JWKS RS256/ES256, issuer/audience/expiry/role/tenant validation and 5-minute key cache | signed-token negative matrix |
+| Auth downgrade control | production defaults OIDC; HMAC requires explicit exception | configuration fail-closed tests |
+| Concurrent audit integrity | per-tenant PostgreSQL advisory transaction lock | 8-worker/24-event no-fork integration test |

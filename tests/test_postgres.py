@@ -1,6 +1,7 @@
 import os
 import pytest
 from sqlalchemy import create_engine,text
+from concurrent.futures import ThreadPoolExecutor
 from taxledger.core import Database
 from taxledger.service import TaxLedgerService
 
@@ -24,3 +25,12 @@ def test_postgres_rls_blocks_direct_cross_tenant_sql():
   conn.execute(text("SELECT set_config('app.tenant_id','alpha',true)"));assert conn.execute(text("SELECT count(*) FROM ledger_entries")).scalar_one()==1
   conn.execute(text("SELECT set_config('app.tenant_id','beta',true)"));assert conn.execute(text("SELECT count(*) FROM ledger_entries")).scalar_one()==0
   assert conn.execute(text("UPDATE ledger_entries SET tax_amount=999 WHERE tenant_id='alpha'")).rowcount==0
+
+def test_postgres_concurrent_audit_chain_has_no_forks():
+ db=Database(URL)
+ def write(i):
+  item={"source_system":"ERP","source_id":f"CON-{i}","period":"2026-09","account_code":"222101","tax_code":"VAT13","net_amount":"1","tax_amount":"0.13"};TaxLedgerService(db,"concurrent").ingest([item])
+ with ThreadPoolExecutor(max_workers=8) as pool:list(pool.map(write,range(24)))
+ with db.connect("concurrent") as conn:
+  from taxledger.integrity import verify_audit_chain
+  result=verify_audit_chain(conn,"concurrent");assert result["valid"] and result["checked"]==24

@@ -11,3 +11,5 @@
 - [ ] Synthetic end-to-end filing workpaper is approved before real data is admitted.
 - [ ] Oversize requests, empty/oversize batches and injected database failures pass negative tests.
 - [ ] Scheduled `audit-verify` and backup jobs use separate least-privileged operational identities.
+- [ ] OIDC issuer/audience/roles/tenant mappings and signing-key rotation are tested; no unapproved HMAC exception remains.
+- [ ] PostgreSQL concurrent audit test proves the tenant chain has no fork.

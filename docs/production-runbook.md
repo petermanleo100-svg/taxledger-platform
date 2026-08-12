@@ -30,4 +30,6 @@ Use `taxledger-operations` for controlled backup, restore and audit verification
 
 The request-serving PostgreSQL identity must be `NOSUPERUSER NOBYPASSRLS` and must not own tables. Migrations run as a separate owner. The application sets `app.tenant_id` transaction-locally and forced RLS supplies database-level defense in depth.
 
+Production authentication defaults to `TAXLEDGER_AUTH_MODE=oidc`. Configure HTTPS issuer/JWKS URL and exact audience; signing keys are cached for five minutes and refreshed by `kid`. The HMAC mode is a documented pilot exception only and requires `TAXLEDGER_ALLOW_HMAC_PRODUCTION=true`; record its owner, expiry and migration date. Tax writes take a tenant-scoped PostgreSQL advisory transaction lock before extending the audit chain.
+
 This repository is deployable for an enterprise pilot. Production tax use still requires customer security review, authoritative tax-rule validation, data mapping sign-off and environment-specific capacity testing.
