@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 REQUIRED_CONTROLS = {
-    "alert_delivery", "backup_rpo_rto", "managed_postgres_pitr_restore",
+    "alert_delivery", "backup_rpo_rto", "database_monitoring_identity", "managed_postgres_pitr_restore",
     "oidc_key_rotation", "staging_migration_rollback", "tax_rule_mapping_approval",
 }
 _GIT_SHA = re.compile(r"^[0-9a-f]{40}$")

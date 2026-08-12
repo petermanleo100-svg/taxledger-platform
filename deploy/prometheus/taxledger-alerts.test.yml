@@ -2,6 +2,22 @@ rule_files:
   - taxledger-alerts.yml
 evaluation_interval: 1m
 tests:
+  - name: taxledger-database-alerts-fire-and-exporter-fails-closed
+    interval: 1m
+    input_series:
+      - series: 'taxledger_db_connection_utilization_ratio'
+        values: '0.9+0x15'
+    alert_rule_test:
+      - eval_time: 11m
+        alertname: TaxLedgerDatabaseConnectionsSaturated
+        exp_alerts:
+          - exp_labels: {severity: critical, service: taxledger, owner: database-operations}
+            exp_annotations: {summary: "TaxLedger PostgreSQL client connections exceed 80% of max_connections", runbook_url: "https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md"}
+      - eval_time: 6m
+        alertname: TaxLedgerDatabaseStatusExporterStale
+        exp_alerts:
+          - exp_labels: {severity: critical, service: taxledger, owner: database-operations, operation: database_status_export}
+            exp_annotations: {summary: "TaxLedger database health metrics are missing or older than ten minutes", runbook_url: "https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md"}
   - name: taxledger-missing-backup-metric-fails-closed
     interval: 1m
     alert_rule_test:

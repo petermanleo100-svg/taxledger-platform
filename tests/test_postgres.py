@@ -15,6 +15,7 @@ from taxledger.integrity import verify_audit_chain
 from taxledger.preflight import PreflightError, run_preflight
 from taxledger.service import TaxLedgerService
 from taxledger.settings import Settings
+from taxledger.database_metrics import collect_database_health
 
 
 URL = os.getenv("TEST_POSTGRES_URL")
@@ -173,3 +174,7 @@ def test_production_preflight_accepts_runtime_role_and_rejects_owner(postgres_db
             conn.execute(text("DROP OWNED BY taxledger_preflight"))
             conn.execute(text("DROP ROLE taxledger_preflight"))
         admin.dispose()
+
+def test_database_health_export_queries_real_postgres(postgres_db):
+    result=collect_database_health(postgres_db)
+    assert result["connections"]>=1 and result["max_connections"]>0 and 0<result["utilization_ratio"]<=1
