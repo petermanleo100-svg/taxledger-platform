@@ -18,7 +18,11 @@ tests:
       - series: 'taxledger_http_request_duration_seconds_bucket{le="+Inf"}'
         values: '0+100x20'
       - series: 'probe_success{job="taxledger-readiness"}'
-        values: '0+0x20'
+        values: '0+0x25'
+      - series: 'taxledger_operation_success{operation="backup_create"}'
+        values: '0+0x25'
+      - series: 'taxledger_operation_last_success_timestamp_seconds{operation="backup_create"}'
+        values: '0+0x25'
     alert_rule_test:
       - eval_time: 16m
         alertname: TaxLedgerHighErrorRate
@@ -41,3 +45,13 @@ tests:
             exp_annotations:
               summary: TaxLedger readiness probe is unavailable
               runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
+      - eval_time: 21m
+        alertname: TaxLedgerOperationFailed
+        exp_alerts:
+          - exp_labels: {severity: critical, service: taxledger, owner: platform-operations, operation: backup_create}
+            exp_annotations: {summary: "TaxLedger scheduled operation failed", runbook_url: "https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md"}
+      - eval_time: 21m
+        alertname: TaxLedgerBackupStale
+        exp_alerts:
+          - exp_labels: {severity: critical, service: taxledger, owner: platform-operations, operation: backup_create}
+            exp_annotations: {summary: "TaxLedger has no successful backup inside the 15-minute RPO window", runbook_url: "https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md"}
