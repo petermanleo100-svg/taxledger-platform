@@ -7,3 +7,7 @@
 | VAT reconciliation | ledger/invoice/return comparison with tolerance | matched and exception workflows |
 | Filing governance | versioned workpaper and independent review | four-eyes test |
 | Deployability | FastAPI, non-root image and CI | API test and container job |
+| Auth and tenant binding | Signed JWT roles and token tenant context | scope and forged-tenant API tests |
+| Operations | request ID, metrics, probes and security headers | operations test |
+| Schema lifecycle | Alembic baseline | upgrade/downgrade round-trip test |
+| Enterprise pilot | PostgreSQL Compose hardening and runbook | PostgreSQL and container CI jobs |
