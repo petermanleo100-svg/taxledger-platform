@@ -17,6 +17,6 @@
 - [ ] PostgreSQL concurrent audit test proves the tenant chain has no fork.
 - [ ] Encrypted restore runs into an empty, exact-revision PostgreSQL schema; audit chain and business lineage readback pass.
 - [ ] `promtool` validates alert rules, and a test notification reaches each named owner in the deployment environment.
-- [ ] The release commit has a retained SPDX image SBOM and no fixed Critical vulnerability blocked by CI.
+- [ ] `pip-audit` passes; the release commit has a retained SPDX image SBOM and no unexcepted fixable High/Critical vulnerability. Review the sole time-bounded `CVE-2026-15308` not-affected record and confirm `html.parser` remains outside executable source.
 - [ ] Candidate archive checksum and both GitHub attestations verify before a SemVer tag is approved.
 - [ ] Tagged GHCR image resolves to the recorded immutable digest and provenance/SBOM attestations verify.

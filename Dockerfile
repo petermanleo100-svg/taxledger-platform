@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.13.15-slim
 WORKDIR /app
 RUN addgroup --system taxledger && adduser --system --ingroup taxledger --home /app taxledger
 COPY pyproject.toml ./
