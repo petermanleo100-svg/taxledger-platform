@@ -19,3 +19,5 @@
 | Enterprise identity | OIDC/JWKS RS256/ES256, issuer/audience/expiry/role/tenant validation and 5-minute key cache | signed-token negative matrix |
 | Auth downgrade control | production defaults OIDC; HMAC requires explicit exception | configuration fail-closed tests |
 | Concurrent audit integrity | per-tenant PostgreSQL advisory transaction lock | 8-worker/24-event no-fork integration test |
+| Actionable observability | versioned Prometheus 5xx, p95 latency and readiness alerts | `promtool check rules` runs in CI; routing remains deployment-specific |
+| Container supply-chain evidence | SPDX JSON SBOM for the built image and fixed-critical vulnerability gate | commit-pinned SBOM/scan actions and retained CI artifact |

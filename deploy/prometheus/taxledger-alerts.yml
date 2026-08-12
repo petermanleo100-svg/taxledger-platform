@@ -1,0 +1,24 @@
+groups:
+  - name: taxledger-api
+    rules:
+      - alert: TaxLedgerHighErrorRate
+        expr: sum(rate(taxledger_http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(taxledger_http_requests_total[5m])), 0.001) > 0.01
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: TaxLedger API 5xx rate exceeds 1%
+      - alert: TaxLedgerP95LatencyHigh
+        expr: histogram_quantile(0.95, sum by (le) (rate(taxledger_http_request_duration_seconds_bucket[10m]))) > 1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: TaxLedger API p95 latency exceeds one second
+      - alert: TaxLedgerReadinessUnavailable
+        expr: probe_success{job="taxledger-readiness"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: TaxLedger readiness probe is unavailable

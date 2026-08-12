@@ -28,6 +28,8 @@ Application backup exports use `taxledger.backup` with a secret-manager supplied
 
 Use `taxledger-operations` for controlled backup, restore and audit verification. Schedule `audit-verify` and alert on a non-zero exit. The API caps bodies at 2 MiB and ledger batches at 1000 rows; tune ingress limits to the same or lower value. Access logs are structured JSON and include the request ID returned to callers.
 
+Load `deploy/prometheus/taxledger-alerts.yml` into the approved Prometheus-compatible backend and route critical/warning severities to named owners. CI validates rule syntax with `promtool`; notification delivery remains an environment acceptance test. Every container CI run retains an SPDX JSON SBOM for 30 days and blocks vulnerabilities that are both Critical and have a known fix. Unfixed findings require explicit release risk review rather than being described as remediated.
+
 The request-serving PostgreSQL identity must be `NOSUPERUSER NOBYPASSRLS` and must not own tables. Migrations run as a separate owner. The application sets `app.tenant_id` transaction-locally and forced RLS supplies database-level defense in depth.
 
 Production authentication defaults to `TAXLEDGER_AUTH_MODE=oidc`. Configure HTTPS issuer/JWKS URL and exact audience; signing keys are cached for five minutes and refreshed by `kid`. The HMAC mode is a documented pilot exception only and requires `TAXLEDGER_ALLOW_HMAC_PRODUCTION=true`; record its owner, expiry and migration date. Tax writes take a tenant-scoped PostgreSQL advisory transaction lock before extending the audit chain.
