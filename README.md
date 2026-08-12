@@ -11,6 +11,7 @@
 - 租户隔离、跨模块审计哈希链、FastAPI/OpenAPI、非 root 容器和 CI。
 - JWT 角色权限与令牌租户绑定，拒绝客户端伪造租户上下文。
 - PostgreSQL/Alembic、健康探针、请求追踪、安全响应头、Prometheus 指标与加固 Compose。
+- PostgreSQL 强制 RLS、AES-256-GCM 加密备份、空库恢复与审计链验证。
 
 ```bash
 pip install -e ".[test]"

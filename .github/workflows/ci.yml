@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-python@v6
         with: {python-version: "3.12", cache: pip}
       - run: pip install -e ".[test]"
+      - env: {TAXLEDGER_DATABASE_URL: "postgresql+psycopg://taxledger:taxledger@localhost:5432/taxledger"}
+        run: alembic upgrade head
       - env: {TEST_POSTGRES_URL: "postgresql+psycopg://taxledger:taxledger@localhost:5432/taxledger"}
         run: pytest -q tests/test_postgres.py
   container:

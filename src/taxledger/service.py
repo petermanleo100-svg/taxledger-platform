@@ -23,13 +23,13 @@ class TaxLedgerService:
                 "period": item["period"], "account_code": item["account_code"], "tax_code": item["tax_code"],
                 "net_amount": money(item["net_amount"]), "tax_amount": money(item["tax_amount"]),
                 "lineage_json": canonical(lineage), "content_hash": digest(material)})
-        with self.db.connect() as conn:
+        with self.db.connect(self.tenant_id) as conn:
             if rows: conn.execute(insert(LedgerEntry), rows)
             audit(conn, self.tenant_id, "LEDGER_INGESTED", rows[0]["period"] if rows else "empty", {"rows": len(rows)})
         return len(rows)
 
     def reconcile(self, period: str, invoice_tax, return_tax, tolerance="0.01") -> dict:
-        with self.db.connect() as conn:
+        with self.db.connect(self.tenant_id) as conn:
             ledger = conn.execute(select(func.coalesce(func.sum(LedgerEntry.tax_amount), 0)).where(
                 LedgerEntry.tenant_id == self.tenant_id, LedgerEntry.period == period)).scalar_one()
             invoice, returned = money(invoice_tax), money(return_tax); ledger = money(ledger)
@@ -45,7 +45,7 @@ class TaxLedgerService:
                 "ledger_return_variance": return_variance, "status": status}
 
     def prepare_workpaper(self, period: str, prepared_by: str) -> dict:
-        with self.db.connect() as conn:
+        with self.db.connect(self.tenant_id) as conn:
             reconciliation = conn.execute(select(VatReconciliation).where(VatReconciliation.tenant_id == self.tenant_id,
                 VatReconciliation.period == period).order_by(VatReconciliation.id.desc()).limit(1)).mappings().one_or_none()
             if reconciliation is None: raise ValueError("VAT reconciliation is required")
@@ -60,7 +60,7 @@ class TaxLedgerService:
         return {"workpaper_id": workpaper_id, "status": "PENDING_REVIEW", "payload_hash": digest(payload)}
 
     def review(self, workpaper_id: int, reviewer: str, approve: bool) -> dict:
-        with self.db.connect() as conn:
+        with self.db.connect(self.tenant_id) as conn:
             row = conn.execute(select(FilingWorkpaper).where(FilingWorkpaper.id == workpaper_id,
                 FilingWorkpaper.tenant_id == self.tenant_id)).mappings().one_or_none()
             if row is None or row["status"] != "PENDING_REVIEW": raise ValueError("workpaper is not pending")
@@ -74,7 +74,7 @@ class TaxLedgerService:
         return {"workpaper_id": workpaper_id, "status": status, "reviewed_by": reviewer}
 
     def lineage(self, source_id: str) -> dict:
-        with self.db.connect() as conn:
+        with self.db.connect(self.tenant_id) as conn:
             row = conn.execute(select(LedgerEntry).where(LedgerEntry.tenant_id == self.tenant_id,
                 LedgerEntry.source_id == source_id).order_by(LedgerEntry.id.desc()).limit(1)).mappings().one_or_none()
         if row is None: raise ValueError("unknown source_id")

@@ -22,8 +22,11 @@ class Database:
         self.engine = create_engine(self.url, **options)
     def initialize(self): Base.metadata.create_all(self.engine)
     @contextmanager
-    def connect(self):
-        with self.engine.begin() as conn: yield conn
+    def connect(self, tenant_id=None):
+        with self.engine.begin() as conn:
+            if tenant_id is not None and self.engine.dialect.name == "postgresql":
+                conn.exec_driver_sql("SELECT set_config('app.tenant_id', %s, true)", (tenant_id,))
+            yield conn
 
 
 def audit(conn, tenant, event_type, entity_id, payload):

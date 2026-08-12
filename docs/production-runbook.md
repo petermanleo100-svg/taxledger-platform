@@ -24,4 +24,8 @@
 
 Revoke affected tokens, preserve audit tables and database snapshots, record the incident timeline, verify the audit chain, restore into an isolated database, then obtain business owner approval before resuming filing workflows.
 
+Application backup exports use `taxledger.backup` with a secret-manager supplied 32-byte base64 key. Restores deliberately refuse non-empty targets and verify the recovered audit chain. This portable logical backup complements, but does not replace, managed PostgreSQL PITR; rehearse both quarterly.
+
+The request-serving PostgreSQL identity must be `NOSUPERUSER NOBYPASSRLS` and must not own tables. Migrations run as a separate owner. The application sets `app.tenant_id` transaction-locally and forced RLS supplies database-level defense in depth.
+
 This repository is deployable for an enterprise pilot. Production tax use still requires customer security review, authoritative tax-rule validation, data mapping sign-off and environment-specific capacity testing.

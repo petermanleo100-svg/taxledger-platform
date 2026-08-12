@@ -1,6 +1,6 @@
 import os
 import pytest
-from sqlalchemy import text
+from sqlalchemy import create_engine,text
 from taxledger.core import Database
 from taxledger.service import TaxLedgerService
 
@@ -14,3 +14,13 @@ def test_postgres_transaction_precision_and_tenant_isolation():
  TaxLedgerService(db,"alpha").ingest([item])
  assert str(TaxLedgerService(db,"alpha").reconcile("2026-08","0.03","0.03")["ledger_tax"])=="0.0300"
  assert str(TaxLedgerService(db,"beta").reconcile("2026-08","0","0")["ledger_tax"])=="0.0000"
+
+def test_postgres_rls_blocks_direct_cross_tenant_sql():
+ admin=create_engine(URL,isolation_level="AUTOCOMMIT")
+ with admin.connect() as conn:
+  conn.execute(text("DROP ROLE IF EXISTS taxledger_runtime"));conn.execute(text("CREATE ROLE taxledger_runtime LOGIN PASSWORD 'runtime-test-password' NOSUPERUSER NOBYPASSRLS"));conn.execute(text("GRANT USAGE ON SCHEMA public TO taxledger_runtime"));conn.execute(text("GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO taxledger_runtime"));conn.execute(text("GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO taxledger_runtime"))
+ runtime=create_engine(URL.replace("taxledger:taxledger@","taxledger_runtime:runtime-test-password@"))
+ with runtime.begin() as conn:
+  conn.execute(text("SELECT set_config('app.tenant_id','alpha',true)"));assert conn.execute(text("SELECT count(*) FROM ledger_entries")).scalar_one()==1
+  conn.execute(text("SELECT set_config('app.tenant_id','beta',true)"));assert conn.execute(text("SELECT count(*) FROM ledger_entries")).scalar_one()==0
+  assert conn.execute(text("UPDATE ledger_entries SET tax_amount=999 WHERE tenant_id='alpha'")).rowcount==0

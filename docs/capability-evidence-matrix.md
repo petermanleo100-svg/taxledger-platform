@@ -11,3 +11,5 @@
 | Operations | request ID, metrics, probes and security headers | operations test |
 | Schema lifecycle | Alembic baseline | upgrade/downgrade round-trip test |
 | Enterprise pilot | PostgreSQL Compose hardening and runbook | PostgreSQL and container CI jobs |
+| Database tenant defense | PostgreSQL FORCE RLS and transaction tenant context | direct SQL cross-tenant attack test |
+| Backup and recovery | AES-256-GCM envelope, empty-target restore, audit-chain verification | wrong-key, non-empty target and business restore tests |
