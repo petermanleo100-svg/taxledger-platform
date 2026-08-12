@@ -1,0 +1,43 @@
+rule_files:
+  - taxledger-alerts.yml
+evaluation_interval: 1m
+tests:
+  - name: taxledger-api-alerts-fire-after-sustained-breach
+    interval: 1m
+    input_series:
+      - series: 'taxledger_http_requests_total{status="200"}'
+        values: '0+100x20'
+      - series: 'taxledger_http_requests_total{status="500"}'
+        values: '0+5x20'
+      - series: 'taxledger_http_request_duration_seconds_bucket{le="0.5"}'
+        values: '0+10x20'
+      - series: 'taxledger_http_request_duration_seconds_bucket{le="1"}'
+        values: '0+20x20'
+      - series: 'taxledger_http_request_duration_seconds_bucket{le="2"}'
+        values: '0+100x20'
+      - series: 'taxledger_http_request_duration_seconds_bucket{le="+Inf"}'
+        values: '0+100x20'
+      - series: 'probe_success{job="taxledger-readiness"}'
+        values: '0+0x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: TaxLedgerHighErrorRate
+        exp_alerts:
+          - exp_labels: {severity: critical, service: taxledger, owner: platform-operations}
+            exp_annotations:
+              summary: TaxLedger API 5xx rate exceeds 1%
+              runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
+      - eval_time: 16m
+        alertname: TaxLedgerP95LatencyHigh
+        exp_alerts:
+          - exp_labels: {severity: warning, service: taxledger, owner: platform-operations}
+            exp_annotations:
+              summary: TaxLedger API p95 latency exceeds one second
+              runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
+      - eval_time: 16m
+        alertname: TaxLedgerReadinessUnavailable
+        exp_alerts:
+          - exp_labels: {severity: critical, service: taxledger, owner: platform-operations, job: taxledger-readiness}
+            exp_annotations:
+              summary: TaxLedger readiness probe is unavailable
+              runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
