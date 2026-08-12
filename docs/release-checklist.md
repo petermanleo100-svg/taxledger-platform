@@ -3,7 +3,7 @@
 - [ ] Main CI test, PostgreSQL, container and full Compose smoke jobs pass on the release commit.
 - [ ] GitHub `main` protection still enforces strict `test`, `postgres`, `container`, `compose-smoke` and `analyze` checks for administrators, with force-push and deletion disabled.
 - [ ] `taxledger-operations preflight` returns `valid: true` using the exact production runtime identity and secret bindings.
-- [ ] Complete `docs/admission-evidence.example.json` with durable evidence for the exact release SHA, then require `taxledger-operations admission-verify <file> --release-sha <sha>` to return `valid: true`; evidence older than seven days must be renewed.
+- [ ] Complete schema-v2 `docs/admission-evidence.example.json` with the deployer, a different verifier, durable URI and independently calculated SHA-256 for every exact-release control; require `taxledger-operations admission-verify <file> --release-sha <sha>` to return `valid: true`. Evidence older than seven days cannot be overridden and must be renewed.
 - [ ] Tax owner approves rules, tolerance and ERP/invoice mappings.
 - [ ] Security approves identity claims, secret storage, TLS, ingress rate limits and database roles.
 - [ ] PostgreSQL isolated-schema latest-revision rollback/re-upgrade CI passes with business-row preservation and restored forced RLS; repeat against the production-like staging copy.

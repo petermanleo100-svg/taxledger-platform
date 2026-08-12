@@ -39,7 +39,7 @@ groups:
           summary: TaxLedger scheduled operation failed
           runbook_url: https://github.com/petermanleo100-svg/taxledger-platform/blob/main/docs/production-runbook.md
       - alert: TaxLedgerTextfileCollectorFailed
-        expr: node_textfile_scrape_error == 1
+        expr: node_textfile_scrape_error{job="taxledger-node-exporter"} == 1
         for: 5m
         labels: {severity: critical, service: taxledger, owner: platform-operations}
         annotations:
