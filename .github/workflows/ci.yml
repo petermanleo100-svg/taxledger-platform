@@ -4,8 +4,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with: {python-version: "3.12", cache: pip}
       - run: pip install -e ".[test]"
       - run: pytest -q
@@ -22,8 +22,8 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U taxledger" --health-interval 5s --health-timeout 3s --health-retries 20
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with: {python-version: "3.12", cache: pip}
       - run: pip install -e ".[test]"
       - env: {TAXLEDGER_DATABASE_URL: "postgresql+psycopg://taxledger:taxledger@localhost:5432/taxledger"}
@@ -41,7 +41,7 @@ jobs:
   container:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - run: docker build -t taxledger:ci .
       - run: docker inspect taxledger:ci --format '{{.Config.User}}' | grep -Fx taxledger
       - run: docker inspect taxledger:ci --format '{{json .Config.Healthcheck}}' | grep -F health/ready
@@ -75,7 +75,7 @@ jobs:
       TAXLEDGER_OIDC_JWKS_URL: https://id.example/jwks
       TAXLEDGER_BACKUP_KEY_BASE64: a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - run: docker compose up --build --detach
       - name: Wait for hardened API readiness
         run: |
