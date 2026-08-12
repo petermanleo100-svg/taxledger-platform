@@ -21,3 +21,4 @@
 | Concurrent audit integrity | per-tenant PostgreSQL advisory transaction lock | 8-worker/24-event no-fork integration test |
 | Actionable observability | versioned Prometheus 5xx, p95 latency and readiness alerts | `promtool check rules` runs in CI; routing remains deployment-specific |
 | Container supply-chain evidence | SPDX JSON SBOM for the built image and fixed-critical vulnerability gate | commit-pinned SBOM/scan actions and retained CI artifact |
+| Verifiable image release path | manual candidate archive with checksum/SBOM/attestations; SemVer tags publish digest-addressed GHCR images with provenance and SBOM attestations | candidate workflow run and `gh attestation verify`; formal image publication remains tag-controlled |

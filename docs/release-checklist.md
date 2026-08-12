@@ -16,3 +16,5 @@
 - [ ] Encrypted restore runs into an empty, exact-revision PostgreSQL schema; audit chain and business lineage readback pass.
 - [ ] `promtool` validates alert rules, and a test notification reaches each named owner in the deployment environment.
 - [ ] The release commit has a retained SPDX image SBOM and no fixed Critical vulnerability blocked by CI.
+- [ ] Candidate archive checksum and both GitHub attestations verify before a SemVer tag is approved.
+- [ ] Tagged GHCR image resolves to the recorded immutable digest and provenance/SBOM attestations verify.
