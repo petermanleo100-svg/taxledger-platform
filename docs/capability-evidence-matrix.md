@@ -9,7 +9,7 @@
 | Deployability | FastAPI, non-root image and CI | API test and container job |
 | Auth and tenant binding | Signed JWT roles and token tenant context | scope and forged-tenant API tests |
 | Operations | request ID, metrics, probes and security headers | operations test |
-| Schema lifecycle | Alembic baseline | upgrade/downgrade round-trip test |
+| Schema lifecycle | Alembic baseline | SQLite full-chain round trip plus PostgreSQL isolated-schema latest-revision downgrade/re-upgrade with business-row preservation and RLS-state verification |
 | Enterprise pilot | PostgreSQL Compose hardening and runbook | PostgreSQL and container CI jobs |
 | Database tenant defense | PostgreSQL FORCE RLS and transaction tenant context | direct SQL cross-tenant attack test |
 | Backup and recovery | AES-256-GCM envelope, exact Alembic-revision/empty-target gates and audit-chain verification | wrong-key/unmigrated-target negatives plus PostgreSQL clean-schema restore and business readback |
