@@ -1,6 +1,7 @@
 # Enterprise pilot release checklist
 
-- [ ] Main CI test, PostgreSQL and container jobs pass on the release commit.
+- [ ] Main CI test, PostgreSQL, container and full Compose smoke jobs pass on the release commit.
+- [ ] `taxledger-operations preflight` returns `valid: true` using the exact production runtime identity and secret bindings.
 - [ ] Tax owner approves rules, tolerance and ERP/invoice mappings.
 - [ ] Security approves identity claims, secret storage, TLS, ingress rate limits and database roles.
 - [ ] Alembic migration and rollback rehearsal pass against a production-like copy.

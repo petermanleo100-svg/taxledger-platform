@@ -10,9 +10,11 @@
 ## Startup and verification
 
 1. Copy `.env.example` to an environment-specific secret source; never commit real values.
-2. Start with `docker compose up -d --build`.
-3. Require `/health/ready` to return 200 before routing traffic.
-4. Validate an authenticated ingest, reconciliation, preparer/reviewer separation and tenant-isolation test.
+2. Provision distinct migration-owner and runtime credentials. For local Compose, use a fresh volume: runtime-role bootstrap runs only on initial database creation.
+3. Run `taxledger-operations preflight` with the runtime identity; require secret-free JSON with `valid: true`.
+4. Start with `docker compose up -d --build`; Compose migrates as the owner and repeats preflight before the API starts.
+5. Require `/health/ready` to return 200 before routing traffic.
+6. Validate an authenticated ingest, reconciliation, preparer/reviewer separation and tenant-isolation test.
 
 ## Operational objectives
 

@@ -30,6 +30,14 @@ jobs:
         run: alembic upgrade head
       - env: {TEST_POSTGRES_URL: "postgresql+psycopg://taxledger:taxledger@localhost:5432/taxledger"}
         run: pytest -q tests/test_postgres.py
+      - name: Validate hardened Compose topology
+        env:
+          POSTGRES_OWNER_PASSWORD: owner-ci-password
+          POSTGRES_APP_PASSWORD: app-ci-password
+          TAXLEDGER_JWT_ISSUER: https://id.example
+          TAXLEDGER_OIDC_JWKS_URL: https://id.example/jwks
+          TAXLEDGER_BACKUP_KEY_BASE64: a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=
+        run: docker compose config --quiet
   container:
     runs-on: ubuntu-latest
     steps:
@@ -58,3 +66,25 @@ jobs:
           name: taxledger-sbom-${{ github.sha }}
           path: taxledger-sbom.spdx.json
           retention-days: 30
+  compose-smoke:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_OWNER_PASSWORD: owner-ci-password
+      POSTGRES_APP_PASSWORD: app-ci-password
+      TAXLEDGER_JWT_ISSUER: https://id.example
+      TAXLEDGER_OIDC_JWKS_URL: https://id.example/jwks
+      TAXLEDGER_BACKUP_KEY_BASE64: a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=
+    steps:
+      - uses: actions/checkout@v6
+      - run: docker compose up --build --detach
+      - name: Wait for hardened API readiness
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8081/health/ready; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - if: always()
+        run: docker compose ps --all && docker compose logs --no-color
+      - if: always()
+        run: docker compose down --volumes --remove-orphans

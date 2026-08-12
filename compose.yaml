@@ -3,28 +3,57 @@ services:
     image: postgres:17.6-alpine
     environment:
       POSTGRES_DB: taxledger
-      POSTGRES_USER: taxledger
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
-    volumes: [taxledger-db:/var/lib/postgresql/data]
-    healthcheck: {test: [CMD-SHELL, pg_isready -U taxledger], interval: 5s, timeout: 3s, retries: 20}
+      POSTGRES_USER: taxledger_owner
+      POSTGRES_PASSWORD: ${POSTGRES_OWNER_PASSWORD:?set POSTGRES_OWNER_PASSWORD}
+      APP_DB_USER: taxledger_app
+      APP_DB_PASSWORD: ${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}
+    volumes:
+      - taxledger-db:/var/lib/postgresql/data
+      - ./deploy/postgres/init-runtime-role.sh:/docker-entrypoint-initdb.d/10-runtime-role.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U taxledger_owner -d taxledger"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     restart: unless-stopped
+
+  migrate:
+    build: .
+    environment:
+      TAXLEDGER_DATABASE_URL: postgresql+psycopg://taxledger_owner:${POSTGRES_OWNER_PASSWORD}@postgres:5432/taxledger
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: "no"
+
   api:
     build: .
     environment:
-      TAXLEDGER_DATABASE_URL: postgresql+psycopg://taxledger:${POSTGRES_PASSWORD}@postgres:5432/taxledger
-      TAXLEDGER_AUTH_MODE: ${TAXLEDGER_AUTH_MODE:-oidc}
+      TAXLEDGER_DATABASE_URL: postgresql+psycopg://taxledger_app:${POSTGRES_APP_PASSWORD}@postgres:5432/taxledger
+      TAXLEDGER_AUTH_MODE: oidc
       TAXLEDGER_JWT_ISSUER: ${TAXLEDGER_JWT_ISSUER:?set OIDC issuer}
       TAXLEDGER_JWT_AUDIENCE: ${TAXLEDGER_JWT_AUDIENCE:-taxledger-api}
       TAXLEDGER_OIDC_JWKS_URL: ${TAXLEDGER_OIDC_JWKS_URL:?set OIDC JWKS URL}
-      TAXLEDGER_JWT_SECRET: ${TAXLEDGER_JWT_SECRET:-}
-      TAXLEDGER_ALLOW_HMAC_PRODUCTION: ${TAXLEDGER_ALLOW_HMAC_PRODUCTION:-false}
+      TAXLEDGER_JWT_SECRET: ""
+      TAXLEDGER_ALLOW_HMAC_PRODUCTION: "false"
+      TAXLEDGER_AUTO_CREATE_SCHEMA: "false"
+      TAXLEDGER_BACKUP_KEY_BASE64: ${TAXLEDGER_BACKUP_KEY_BASE64:?set base64 32-byte backup key}
       TAXLEDGER_ENV: production
-    depends_on: {postgres: {condition: service_healthy}}
-    command: ["sh","-c","alembic upgrade head && exec uvicorn taxledger.api:create_app --factory --host 0.0.0.0 --port 8000"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: ["sh", "-c", "taxledger-operations preflight && exec uvicorn taxledger.api:create_app --factory --host 0.0.0.0 --port 8000"]
     ports: ["127.0.0.1:8081:8000"]
     read_only: true
     tmpfs: [/tmp]
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     restart: unless-stopped
-volumes: {taxledger-db: {}}
+
+volumes:
+  taxledger-db:

@@ -12,7 +12,9 @@ from sqlalchemy.engine import make_url
 from taxledger.backup import create_backup, restore_backup
 from taxledger.core import Database
 from taxledger.integrity import verify_audit_chain
+from taxledger.preflight import PreflightError, run_preflight
 from taxledger.service import TaxLedgerService
+from taxledger.settings import Settings
 
 
 URL = os.getenv("TEST_POSTGRES_URL")
@@ -120,3 +122,27 @@ def test_postgres_encrypted_backup_restores_to_clean_schema(postgres_db, tmp_pat
         target.engine.dispose()
         with postgres_db.engine.begin() as conn:
             conn.execute(text("DROP SCHEMA recovery_target CASCADE"))
+
+
+def test_production_preflight_accepts_runtime_role_and_rejects_owner(postgres_db):
+    admin = create_engine(URL, isolation_level="AUTOCOMMIT")
+    with admin.connect() as conn:
+        conn.execute(text("DROP ROLE IF EXISTS taxledger_preflight"))
+        conn.execute(text("CREATE ROLE taxledger_preflight LOGIN PASSWORD 'preflight-password' NOSUPERUSER NOBYPASSRLS"))
+        conn.execute(text("GRANT CONNECT ON DATABASE taxledger TO taxledger_preflight"))
+        conn.execute(text("GRANT USAGE ON SCHEMA public TO taxledger_preflight"))
+        conn.execute(text("GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO taxledger_preflight"))
+        conn.execute(text("GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO taxledger_preflight"))
+    runtime_url = URL.replace("taxledger:taxledger@", "taxledger_preflight:preflight-password@")
+    settings = Settings(runtime_url, "", "https://id.example", "taxledger-api", "production", False, "oidc", "https://id.example/jwks", False)
+    try:
+        result = run_preflight(settings, BACKUP_KEY)
+        assert result["valid"] and result["database"]["user"] == "taxledger_preflight"
+        owner_settings = Settings(URL, "", "https://id.example", "taxledger-api", "production", False, "oidc", "https://id.example/jwks", False)
+        with pytest.raises(PreflightError, match="superuser"):
+            run_preflight(owner_settings, BACKUP_KEY)
+    finally:
+        with admin.connect() as conn:
+            conn.execute(text("DROP OWNED BY taxledger_preflight"))
+            conn.execute(text("DROP ROLE taxledger_preflight"))
+        admin.dispose()

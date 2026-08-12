@@ -22,3 +22,4 @@
 | Actionable observability | versioned Prometheus 5xx, p95 latency and readiness alerts | `promtool check rules` runs in CI; routing remains deployment-specific |
 | Container supply-chain evidence | SPDX JSON SBOM for the built image and fixed-critical vulnerability gate | commit-pinned SBOM/scan actions and retained CI artifact |
 | Verifiable image release path | manual candidate archive with checksum/SBOM/attestations; SemVer tags publish digest-addressed GHCR images with provenance and SBOM attestations | candidate workflow run and `gh attestation verify`; formal image publication remains tag-controlled |
+| Environment admission preflight | fail-closed production config, runtime role privilege/ownership checks, exact Alembic revision, forced RLS and 32-byte backup-key validation | PostgreSQL positive/owner-negative integration test and full Compose readiness smoke job |
