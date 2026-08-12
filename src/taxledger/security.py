@@ -14,7 +14,7 @@ ROLE_SCOPES = {
     "viewer": {"ledger:read", "workpaper:read"},
     "preparer": {"ledger:read", "ledger:write", "workpaper:read", "workpaper:prepare"},
     "reviewer": {"ledger:read", "workpaper:read", "workpaper:review"},
-    "admin": {"ledger:read", "ledger:write", "workpaper:read", "workpaper:prepare", "workpaper:review"},
+    "admin": {"ledger:read", "ledger:write", "workpaper:read", "workpaper:prepare", "workpaper:review", "integrity:verify"},
 }
 
 

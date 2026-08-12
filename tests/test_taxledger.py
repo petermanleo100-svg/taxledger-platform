@@ -6,6 +6,7 @@ from taxledger.core import Database
 from taxledger.service import TaxLedgerService
 from taxledger.security import issue_token
 from taxledger.settings import Settings
+from sqlalchemy.exc import OperationalError
 
 
 def entries(): return [
@@ -67,3 +68,20 @@ def test_operational_headers_metrics_and_strict_payload(tmp_path):
     token=issue_token(settings,"alice","alpha",["preparer"])
     invalid={**entries()[0],"unexpected":"blocked"}
     assert client.post("/ledger/entries",json=[invalid],headers={"Authorization":f"Bearer {token}"}).status_code==422
+
+def test_resource_limits_and_admin_integrity_endpoint(tmp_path):
+    settings=Settings(str(tmp_path/"limits.db"),"test-secret-that-is-at-least-32-bytes",environment="test");client=TestClient(create_app(settings=settings,initialize=True))
+    prep={"Authorization":f"Bearer {issue_token(settings,'alice','alpha',['preparer'])}"};admin={"Authorization":f"Bearer {issue_token(settings,'admin','alpha',['admin'])}"}
+    assert client.post("/ledger/entries",json=[],headers=prep).status_code==413
+    assert client.post("/ledger/entries",content=b"x"*(2*1024*1024+1),headers={**prep,"Content-Type":"application/json"}).status_code==413
+    assert client.get("/operations/integrity",headers=prep).status_code==403
+    assert client.post("/ledger/entries",json=entries(),headers=prep).status_code==201
+    assert client.get("/operations/integrity",headers=admin).json()["valid"] is True
+
+def test_database_failures_are_sanitized(tmp_path,monkeypatch):
+    settings=Settings(str(tmp_path/"failure.db"),"test-secret-that-is-at-least-32-bytes",environment="test");app=create_app(settings=settings,initialize=True);client=TestClient(app)
+    from taxledger.service import TaxLedgerService
+    def fail(*_args,**_kwargs):raise OperationalError("SELECT secret",{},RuntimeError("password=do-not-leak"))
+    monkeypatch.setattr(TaxLedgerService,"ingest",fail);token=issue_token(settings,"alice","alpha",["preparer"])
+    response=client.post("/ledger/entries",json=entries(),headers={"Authorization":f"Bearer {token}"})
+    assert response.status_code==503 and response.json()=={"detail":"database operation failed"} and "password" not in response.text

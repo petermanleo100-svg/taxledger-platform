@@ -5,6 +5,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from sqlalchemy import delete,insert,select
 from .core import Database,canonical,digest,now
 from .models import AuditEvent,FilingWorkpaper,LedgerEntry,VatReconciliation
+from .integrity import verify_audit_chain
 
 TABLES=(LedgerEntry,VatReconciliation,FilingWorkpaper,AuditEvent)
 def _key(value=None):
@@ -32,8 +33,6 @@ def restore_backup(target:Database,path,key_b64=None):
   for model in TABLES:
    rows=payload["tables"][model.__tablename__]
    if rows:conn.execute(insert(model),rows)
-  audit_rows=conn.execute(select(AuditEvent).order_by(AuditEvent.tenant_id,AuditEvent.id)).mappings();previous={};valid=True
-  for row in audit_rows:
-   tenant=row["tenant_id"];valid=valid and row["previous_hash"]==previous.get(tenant,"GENESIS");previous[tenant]=row["event_hash"]
- if not valid:raise ValueError("restored audit chain is invalid")
+  verification=verify_audit_chain(conn)
+ if not verification["valid"]:raise ValueError("restored audit chain is invalid")
  return {"valid":True,"rows":sum(map(len,payload["tables"].values())),"plaintext_sha256":envelope["plaintext_sha256"]}

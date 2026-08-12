@@ -12,6 +12,7 @@
 - JWT 角色权限与令牌租户绑定，拒绝客户端伪造租户上下文。
 - PostgreSQL/Alembic、健康探针、请求追踪、安全响应头、Prometheus 指标与加固 Compose。
 - PostgreSQL 强制 RLS、AES-256-GCM 加密备份、空库恢复与审计链验证。
+- 2 MiB 请求限制、1000 条批量上限、统一数据库错误、结构化访问日志和管理员完整性接口。
 
 ```bash
 pip install -e ".[test]"
@@ -20,5 +21,7 @@ uvicorn taxledger.api:create_app --factory --port 8000
 ```
 
 企业试点使用 `.env.example`、`compose.yaml` 和 `docs/production-runbook.md`；首次启动由 Alembic 执行迁移。CI 同时验证 SQLite 工作流、迁移往返、PostgreSQL 精度/隔离和非 root 容器。
+
+运维入口：`taxledger-operations backup-create <path>`、`backup-restore <path> --target-url <url>` 与 `audit-verify [--tenant ...]`。
 
 项目使用合成数据验证工程行为，不构成税务意见，也不声称未经客户验证即可直接用于法定申报。生产启用仍需税务规则、数据映射、安全与容量准入。

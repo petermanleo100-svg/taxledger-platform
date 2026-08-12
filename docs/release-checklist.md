@@ -9,3 +9,5 @@
 - [ ] Tenant isolation and preparer/reviewer separation are tested with customer identities.
 - [ ] Monitoring routes readiness, 5xx, latency, database and backup alerts to named owners.
 - [ ] Synthetic end-to-end filing workpaper is approved before real data is admitted.
+- [ ] Oversize requests, empty/oversize batches and injected database failures pass negative tests.
+- [ ] Scheduled `audit-verify` and backup jobs use separate least-privileged operational identities.
